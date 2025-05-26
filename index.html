@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🥊 吵架包赢 - 让你在任何争论中都无往不胜</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'wechat-primary': '#07C160',
+            'wechat-secondary': '#1AAD19',
+            'wechat-light': '#F7F7F7',
+            'wechat-dark': '#181818',
+            'wechat-gray': '#ABABAB',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* 自定義滑動條樣式 */
+    .slider::-webkit-slider-thumb {
+      appearance: none;
+      height: 20px;
+      width: 20px;
+      border-radius: 50%;
+      background: #07C160;
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    .slider::-moz-range-thumb {
+      height: 20px;
+      width: 20px;
+      border-radius: 50%;
+      background: #07C160;
+      cursor: pointer;
+      border: none;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    /* 加載動畫 */
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .animate-spin {
+      animation: spin 1s linear infinite;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-wechat-light to-gray-50">
+  <div class="min-h-screen px-4 py-8">
+    <div class="max-w-md mx-auto">
+      <!-- 頁面標題 -->
+      <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">
+          🥊 吵架包赢
+        </h1>
+        <p class="text-gray-600 text-sm">
+          让你在任何争论中都无往不胜！
+        </p>
+      </div>
+
+      <!-- 主要輸入區域 -->
+      <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+        <!-- 對方的話輸入 -->
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            对方说了什么？
+          </label>
+          <textarea
+            id="opponentText"
+            placeholder="在这里输入对方的话..."
+            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-wechat-primary focus:border-transparent resize-none"
+            rows="4"
+            maxlength="200"
+          ></textarea>
+          <div class="text-right text-xs text-gray-400 mt-1">
+            <span id="charCount">0</span>/200
+          </div>
+        </div>
+
+        <!-- 語氣強度滑動條 -->
+        <div class="mb-6">
+          <div class="w-full">
+            <div class="flex justify-between items-center mb-4">
+              <label class="text-sm font-medium text-gray-700">
+                语气强烈程度
+              </label>
+              <span class="text-lg font-bold text-wechat-primary" id="intensityValue">
+                5/10
+              </span>
+            </div>
+            
+            <div class="relative">
+              <input
+                type="range"
+                min="1"
+                max="10"
+                value="5"
+                id="intensitySlider"
+                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+              />
+            </div>
+            
+            <div class="mt-3 text-center">
+              <span class="text-sm font-medium text-gray-600" id="intensityLabel">
+                犀利
+              </span>
+            </div>
+            
+            <div class="flex justify-between mt-2 text-xs text-gray-400">
+              <span>1</span>
+              <span>5</span>
+              <span>10</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 錯誤信息 -->
+        <div id="errorMessage" class="mb-4 p-3 bg-red-100 border border-red-300 rounded-lg text-red-700 text-sm hidden">
+        </div>
+
+        <!-- 按鈕區域 -->
+        <div class="flex space-x-3">
+          <button
+            id="submitBtn"
+            class="flex-1 bg-wechat-primary hover:bg-wechat-secondary disabled:bg-gray-300 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+          >
+            🔥 开始吵架
+          </button>
+          <button
+            id="clearBtn"
+            class="px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
+          >
+            清空
+          </button>
+        </div>
+      </div>
+
+      <!-- 回應顯示區域 -->
+      <div id="responseArea" class="bg-white rounded-lg shadow-lg p-6 hidden">
+        <div id="loadingArea" class="text-center text-wechat-gray hidden">
+          <div class="inline-flex items-center">
+            <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-wechat-primary mr-2"></div>
+            正在生成牛逼的回应...
+          </div>
+        </div>
+        
+        <div id="responsesContainer">
+          <h3 class="text-lg font-bold text-center text-gray-800 mb-6">
+            🔥 为你量身定做的回怼 🔥
+          </h3>
+          <div id="responsesList"></div>
+          <div class="text-center mt-6">
+            <button
+              id="copyAllBtn"
+              class="bg-wechat-primary hover:bg-wechat-secondary text-white font-bold py-3 px-6 rounded-lg transition-colors"
+            >
+              📋 复制全部回应
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 頁腳 -->
+      <div class="text-center mt-8 text-xs text-gray-400">
+        <p>⚡ 由 AI 驱动，让你在争论中永远占上风</p>
+        <p class="mt-1">使用时请理性，维持良好沟通氛围 💪</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+
+    const intensityLabels = [
+      '温和', '稍严肃', '直接', '严厉', '犀利', 
+      '强烈', '激烈', '狠狠', '毫不留情', '一针见血'
+    ];
+
+    const intensityLevels = [
+      '溫和理性地',
+      '稍微嚴肅地',
+      '直接地',
+      '嚴厲地',
+      '犀利地',
+      '強烈地',
+      '激烈地',
+      '狠狠地',
+      '毫不留情地',
+      '一針見血地'
+    ];
+
+    // 元素引用
+    const opponentTextEl = document.getElementById('opponentText');
+    const charCountEl = document.getElementById('charCount');
+    const intensitySliderEl = document.getElementById('intensitySlider');
+    const intensityValueEl = document.getElementById('intensityValue');
+    const intensityLabelEl = document.getElementById('intensityLabel');
+    const submitBtnEl = document.getElementById('submitBtn');
+    const clearBtnEl = document.getElementById('clearBtn');
+    const errorMessageEl = document.getElementById('errorMessage');
+    const responseAreaEl = document.getElementById('responseArea');
+    const loadingAreaEl = document.getElementById('loadingArea');
+    const responsesContainerEl = document.getElementById('responsesContainer');
+    const responsesListEl = document.getElementById('responsesList');
+    const copyAllBtnEl = document.getElementById('copyAllBtn');
+
+    let currentResponses = [];
+
+    // 初始化
+    function init() {
+      updateCharCount();
+      updateIntensityDisplay();
+      
+      // 事件監聽器
+      opponentTextEl.addEventListener('input', updateCharCount);
+      intensitySliderEl.addEventListener('input', updateIntensityDisplay);
+      submitBtnEl.addEventListener('click', handleSubmit);
+      clearBtnEl.addEventListener('click', clearForm);
+      copyAllBtnEl.addEventListener('click', copyAllResponses);
+      
+      // 更新滑動條背景
+      updateSliderBackground();
+      intensitySliderEl.addEventListener('input', updateSliderBackground);
+    }
+
+    function updateCharCount() {
+      const count = opponentTextEl.value.length;
+      charCountEl.textContent = count;
+    }
+
+    function updateIntensityDisplay() {
+      const value = parseInt(intensitySliderEl.value);
+      intensityValueEl.textContent = `${value}/10`;
+      intensityLabelEl.textContent = intensityLabels[value - 1];
+    }
+
+    function updateSliderBackground() {
+      const value = parseInt(intensitySliderEl.value);
+      const percentage = (value - 1) * 11.11;
+      intensitySliderEl.style.background = `linear-gradient(to right, #07C160 0%, #07C160 ${percentage}%, #e5e5e5 ${percentage}%, #e5e5e5 100%)`;
+    }
+
+    function showError(message) {
+      errorMessageEl.textContent = message;
+      errorMessageEl.classList.remove('hidden');
+    }
+
+    function hideError() {
+      errorMessageEl.classList.add('hidden');
+    }
+
+    function showLoading() {
+      responseAreaEl.classList.remove('hidden');
+      loadingAreaEl.classList.remove('hidden');
+      responsesContainerEl.classList.add('hidden');
+    }
+
+    function hideLoading() {
+      loadingAreaEl.classList.add('hidden');
+      responsesContainerEl.classList.remove('hidden');
+    }
+
+    async function generateQuarrelResponses(opponentText, intensity) {
+      const response = await fetch('/.netlify/functions/deepseek', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          opponentText,
+          intensity,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `API 請求失敗: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return data.responses;
+    }
+
+    async function handleSubmit() {
+      const opponentText = opponentTextEl.value.trim();
+      const intensity = parseInt(intensitySliderEl.value);
+
+      if (!opponentText) {
+        showError('请输入对方说的话');
+        return;
+      }
+
+      hideError();
+      showLoading();
+      submitBtnEl.disabled = true;
+      submitBtnEl.textContent = '生成中...';
+
+      try {
+        const responses = await generateQuarrelResponses(opponentText, intensity);
+        currentResponses = responses;
+        displayResponses(responses);
+        hideLoading();
+        
+        // 保存到本地存儲
+        saveToHistory(opponentText, intensity, responses);
+      } catch (error) {
+        console.error('生成回應失敗:', error);
+        showError('无法生成回应，请稍后再试');
+        responseAreaEl.classList.add('hidden');
+      } finally {
+        submitBtnEl.disabled = false;
+                  submitBtnEl.textContent = '🔥 开始吵架';
+      }
+    }
+
+    function displayResponses(responses) {
+      responsesListEl.innerHTML = '';
+      
+      responses.forEach((response, index) => {
+        const responseEl = document.createElement('div');
+        responseEl.className = 'bg-white rounded-lg p-4 shadow-md border-l-4 border-wechat-primary mb-4';
+        responseEl.innerHTML = `
+          <div class="flex justify-between items-start">
+            <div class="flex-1">
+              <div class="flex items-center mb-2">
+                <span class="bg-wechat-primary text-white text-xs px-2 py-1 rounded-full font-bold">
+                  第 ${index + 1} 擊
+                </span>
+              </div>
+              <p class="text-gray-800 leading-relaxed">
+                ${response}
+              </p>
+            </div>
+            <button
+              onclick="copyToClipboard('${response.replace(/'/g, "\\'")}')"
+              class="ml-3 p-2 text-gray-400 hover:text-wechat-primary transition-colors"
+              title="复制文字"
+            >
+              📋
+            </button>
+          </div>
+        `;
+        responsesListEl.appendChild(responseEl);
+      });
+    }
+
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        // 可以添加提示，這裡簡化處理
+        console.log('已复制到剪贴板');
+      }).catch(err => {
+        console.error('复制失败:', err);
+      });
+    }
+
+    function copyAllResponses() {
+      const allText = currentResponses.join('\n\n');
+      copyToClipboard(allText);
+    }
+
+    function clearForm() {
+      opponentTextEl.value = '';
+      intensitySliderEl.value = '5';
+      updateCharCount();
+      updateIntensityDisplay();
+      updateSliderBackground();
+      hideError();
+      responseAreaEl.classList.add('hidden');
+      currentResponses = [];
+    }
+
+    function saveToHistory(opponentText, intensity, responses) {
+      try {
+        const history = JSON.parse(localStorage.getItem('quarrel-history') || '[]');
+        const newItem = {
+          id: Date.now().toString(),
+          opponentText,
+          intensity,
+          responses,
+          timestamp: Date.now()
+        };
+        
+        const updatedHistory = [newItem, ...history].slice(0, 50);
+        localStorage.setItem('quarrel-history', JSON.stringify(updatedHistory));
+      } catch (error) {
+        console.error('保存历史记录失败:', error);
+      }
+    }
+
+    // 初始化應用
+    init();
+  </script>
+</body>
+</html> 
